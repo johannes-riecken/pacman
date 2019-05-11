@@ -106,7 +106,7 @@ Point*  neighborsImpl(int x, int y, int dir_x, int dir_y) {
 }
 
 // TODO: fill in details
-Point*  walkLine(int **img, int x, int y, Point *seen) {
+Point*  walkLine(__attribute__((unused)) int **img, int x, int y, __attribute__((unused)) Point *seen) {
   char *my_argv[] = { "", "Pacman.pm" };
   char **my_argv2[] = { my_argv };
   int argc = 1;
@@ -150,7 +150,7 @@ Point*  walkLine(int **img, int x, int y, Point *seen) {
   return pnts;
 }
 
-int main (int argc, char **argv, char **env)
+int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv, __attribute__((unused)) char **env)
 {
   setvbuf(stdout, NULL, _IONBF, 0);
   // neighbors(1,1,1,1);
