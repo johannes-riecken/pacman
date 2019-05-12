@@ -70,13 +70,13 @@ prop_neighborNotSelf :: CInt -> CInt -> CInt -> CInt -> Bool
 prop_neighborNotSelf x y dir_x dir_y =
     (x,y) `notElem` neighbors x y dir_x dir_y
 
-foreign import ccall "filterCorners" filterCornersImpl :: Ptr (V2 CInt) -> CSize -> Ptr CSize -> IO (Ptr (V2 CInt))
+foreign import ccall "filterCorners" filterCornersImpl :: CSize -> Ptr (V2 CInt) -> Ptr CSize -> IO (Ptr (V2 CInt))
 
 filterCorners :: [V2 CInt] -> [V2 CInt]
 filterCorners xs = unsafePerformIO $ do
   arr <- newArray xs
   p_outlen :: Ptr CSize <- malloc
-  ret <- filterCornersImpl arr (genericLength xs) p_outlen
+  ret <- filterCornersImpl (genericLength xs) arr p_outlen
   outlen <- peek p_outlen
   peekArray (fromIntegral outlen) ret
 
@@ -158,21 +158,21 @@ instance Arbitrary RandomWalk where
 
 main = do
   putStrLn "Beginning tests"
-  -- quickCheck $ \(RandomWalk xs) -> prop_onlyCorners (filterCorners . fmap (\(x,y) -> V2 x y) $ xs)
-  -- quickCheck $ prop_lerpIsSupersequence
-  -- quickCheck $ \x y z->prop_lerpLineAdjPoints x y z
+  quickCheck $ \(RandomWalk xs) -> prop_onlyCorners (filterCorners . fmap (\(x,y) -> V2 x y) $ xs)
+  -- FALSE quickCheck $ prop_lerpIsSupersequence
+  -- FALSE quickCheck $ \x y z->prop_lerpLineAdjPoints x y z
   quickCheck $ \(RandomWalk xs) -> prop_lerpCornersId (fmap (\(x,y)->V2 x y) xs)
-  -- quickCheck $ \(RandomWalk xs) -> prop_findsCorners (fmap (\(x,y) -> V2 x y) xs)
+  quickCheck $ \(RandomWalk xs) -> prop_findsCorners (fmap (\(x,y) -> V2 x y) xs)
   -- n <- neighbors 0 0 1 1
   -- print n
   -- m <- neighbors 1 1 1 1
   -- print m
-  -- quickCheck $ prop_neighborNeighborSelf
-  -- quickCheck $ prop_neighborNotSelf
-  -- quickCheck $ \(x0,y0) (x1,y1) -> fmap (uncurry V2) (lerpLine' (x0,y0) (x1,y1)) === lerpLine (V2 x0 y0) (V2 x1 y1)
-  -- quickCheck prop_substringsSizeN
-  -- quickCheck prop_substringsIso
-  -- quickCheck prop_substringsNumber
+  -- FALSE quickCheck $ prop_neighborNeighborSelf
+  -- FALSE quickCheck $ prop_neighborNotSelf
+  -- FALSE quickCheck $ \(x0,y0) (x1,y1) -> fmap (uncurry V2) (lerpLine' (x0,y0) (x1,y1)) === lerpLine (V2 x0 y0) (V2 x1 y1)
+  quickCheck prop_substringsSizeN
+  quickCheck prop_substringsIso
+  quickCheck prop_substringsNumber
 -- findLines = walk
 -- 
 -- walk = if black || seen then walkOn else walkLine fromLeft
