@@ -6,6 +6,7 @@
 static PerlInterpreter *my_perl;
 #define PIXEL_NEIGHBORS 8
 
+extern "C" {
 Point *filterCorners(Point *points, size_t len, size_t *outlen) {
   char *my_argv[] = { "", "Pacman.pm" };
   char **my_argv2[] = { my_argv };
@@ -41,7 +42,7 @@ Point *filterCorners(Point *points, size_t len, size_t *outlen) {
   AV *popped_av = (AV*) SvRV(popped);
   *outlen = (size_t) av_top_index(popped_av) + 1;
   // static Point ret[*outlen];
-  Point *ret = malloc(sizeof(Point) * *outlen);
+  Point *ret = (Point*)malloc(sizeof(Point) * *outlen);
   for (size_t i = 0; i < *outlen; i++) {
     SV *pnt_rv = av_pop(popped_av);
     AV *pnt_av = (AV*) SvRV(pnt_rv);
@@ -168,4 +169,4 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv,
   Point *res = filterCorners(empty, 0, &outlen);
   printf("%d, %d\n", res->x, res->y);
 }
-
+}
