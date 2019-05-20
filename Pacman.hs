@@ -13,27 +13,8 @@ import Data.List.Extra (snoc)
 import Control.Monad
 import Test.QuickCheck.Instances.Natural
 import GHC.Real
-import Foreign.C
-import Foreign.Ptr
-import Foreign.Storable
-import Foreign.Marshal.Array
-import Foreign.Marshal.Alloc
-import System.IO.Unsafe
 import Data.Vector.Storable (Vector(..))
-
-foreign import ccall
-    doubleArray :: Ptr CInt -> CSize -> Ptr CSize -> IO (Ptr CInt)
-
-foreign import ccall
-    neighborsImpl :: CInt -> CInt -> CInt -> CInt -> Ptr (V2 CInt)
-
-{-# ANN neighbors "HLint: ignore Avoid restricted function" #-}
-neighbors :: CInt -> CInt -> CInt -> CInt -> [(CInt,CInt)]
-neighbors x y dir_x dir_y =
-    fmap v2ToTuple .
-        unsafePerformIO .
-        peekArray 8 $ -- convert int[8] to haskell list
-        neighborsImpl x y dir_x dir_y
+import PacmanForeign
 
 substrings :: Natural -> [a] -> [[a]]
 substrings n xs = catMaybes $ fmap (takeMay n) (tails xs)
@@ -71,17 +52,6 @@ prop_neighborNotSelf :: CInt -> CInt -> CInt -> CInt -> Bool
 prop_neighborNotSelf x y dir_x dir_y =
     (x,y) `notElem` neighbors x y dir_x dir_y
 
-foreign import ccall "filterCorners" filterCornersImpl :: CSize -> Ptr (V2 CInt) -> Ptr CSize -> IO (Ptr (V2 CInt))
-
-{-# ANN filterCorners "HLint: ignore Avoid restricted function" #-}
-filterCorners :: [V2 CInt] -> [V2 CInt]
-filterCorners xs = unsafePerformIO $ do
-  arr <- newArray xs
-  p_outlen :: Ptr CSize <- malloc
-  ret <- filterCornersImpl (genericLength xs) arr p_outlen
-  outlen <- peek p_outlen
-  peekArray (fromIntegral outlen) ret
-
 prop_onlyCorners :: [V2 CInt] -> Bool
 prop_onlyCorners xs =
     and . fmap
@@ -115,7 +85,6 @@ zipWithLub' _ [] ys = ys
 zipWithLub' f xs ys = fromJust $ (<>) <$> headMay res <*> ((=<<) (drop 1) <$> tailMay res) where res = zipWith f xs ys
 
 lerp' :: [V2 CInt] -> [V2 CInt]
--- lerp' xs = join $ zipWithLub lerpLine xs (tail xs)
 lerp' (fmap v2ToTuple -> xs) = tupleToV2 <$> zipWithLub' lerpLine' xs (tail xs)
 
 lerpLine' :: (CInt,CInt) -> (CInt,CInt) -> [(CInt,CInt)]
@@ -139,9 +108,6 @@ prop_lerpIsSupersequence a b = [a,b] `isSubsequenceOf` lerpLine' a b
 tupleToV2 :: (CInt,CInt) -> V2 CInt
 tupleToV2 = uncurry V2
 
-v2ToTuple :: V2 CInt -> (CInt,CInt)
-v2ToTuple (V2 x y) = (x,y)
-
 lerpLine :: V2 CInt -> V2 CInt -> [V2 CInt]
 lerpLine p0@(V2 x0 y0) p1@(V2 x1 y1) =
     fmap (\n -> (p0 ^+^) $
@@ -155,8 +121,6 @@ instance Arbitrary RandomWalk where
           scanl (\(a,b) (c,d)->(a+c,b+d)) (0,0) .
           filter (/=(0,0)))
               (listOf $ (,) <$> elements [-1..1] <*> elements [-1..1])
-
--- foreign import ccall "walkLine" walkLineImpl :: Img -> CInt -> CInt -> Seen -> [Point]
 
 main = do
   putStrLn "Beginning tests"
