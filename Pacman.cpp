@@ -18,7 +18,10 @@ static const int PIXEL_NEIGHBORS = 8;
 
 extern "C" {
 Point *filterCorners(span<Point> points, size_t *outlen) {
-  array<char *, 2> my_argv{"", "Pacman.pm"};
+  string module_name_tmp = "Pacman.pm";
+  gsl::owner<char *> module_name = new char[module_name_tmp.length()];
+  strcpy(module_name, module_name_tmp.c_str());
+  array<char *, 2> my_argv{nullptr, module_name};
   array<char **, 1> my_argv2{&my_argv[0]};
   int argc = 1;
   array<char *, 1> env = {nullptr};
@@ -73,7 +76,10 @@ Point *filterCorners(span<Point> points, size_t *outlen) {
 }
 
 Point *neighborsImpl(int x, int y, int dir_x, int dir_y) {
-  array<char *, 2> my_argv{"", "Pacman.pm"};
+  string module_name_tmp = "Pacman.pm";
+  gsl::owner<char *> module_name = new char[module_name_tmp.length()];
+  strcpy(module_name, module_name_tmp.c_str());
+  array<char *, 2> my_argv{nullptr, module_name};
   array<char **, 1> my_argv2{&my_argv[0]};
   int argc = 1;
   array<char *, 1> env = {nullptr};
@@ -121,7 +127,10 @@ Point *neighborsImpl(int x, int y, int dir_x, int dir_y) {
 // TODO: fill in details
 Point *walkLine(__attribute__((unused)) int **img, int x, int y,
                 __attribute__((unused)) Point *seen) {
-  array<char *, 2> my_argv{"", "Pacman.pm"};
+  string module_name_tmp = "Pacman.pm";
+  gsl::owner<char *> module_name = new char[module_name_tmp.length()];
+  strcpy(module_name, module_name_tmp.c_str());
+  array<char *, 2> my_argv{nullptr, module_name};
   array<char **, 1> my_argv2{&my_argv[0]};
   int argc = 1;
   array<char *, 1> env = {nullptr};
