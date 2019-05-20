@@ -2,19 +2,19 @@
 -- {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 {-# LANGUAGE ViewPatterns, ScopedTypeVariables #-}
 
-import Numeric.Natural
-import Linear hiding (E)
-import Safe
-import Data.Maybe
+import Control.Monad
 import Data.Function.Pointless
 import Data.List
-import Test.QuickCheck
 import Data.List.Extra (snoc)
-import Control.Monad
-import Test.QuickCheck.Instances.Natural
-import GHC.Real
+import Data.Maybe
 import Data.Vector.Storable (Vector(..))
+import GHC.Real
+import Linear hiding (E)
+import Numeric.Natural
 import PacmanForeign
+import Safe
+import Test.QuickCheck
+import Test.QuickCheck.Instances.Natural
 
 substrings :: Natural -> [a] -> [[a]]
 substrings n xs = catMaybes $ fmap (takeMay n) (tails xs)
