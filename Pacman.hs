@@ -27,6 +27,7 @@ foreign import ccall
 foreign import ccall
     neighborsImpl :: CInt -> CInt -> CInt -> CInt -> Ptr (V2 CInt)
 
+{-# ANN neighbors "HLint: ignore Avoid restricted function" #-}
 neighbors :: CInt -> CInt -> CInt -> CInt -> [(CInt,CInt)]
 neighbors x y dir_x dir_y =
     fmap v2ToTuple .
@@ -72,6 +73,7 @@ prop_neighborNotSelf x y dir_x dir_y =
 
 foreign import ccall "filterCorners" filterCornersImpl :: CSize -> Ptr (V2 CInt) -> Ptr CSize -> IO (Ptr (V2 CInt))
 
+{-# ANN filterCorners "HLint: ignore Avoid restricted function" #-}
 filterCorners :: [V2 CInt] -> [V2 CInt]
 filterCorners xs = unsafePerformIO $ do
   arr <- newArray xs
@@ -100,7 +102,7 @@ prop_findsCorners xs =
 
 prop_randWalkUnlerpable :: RandomWalk -> Property
 prop_randWalkUnlerpable (RandomWalk xs) =
-    lerp' (fmap (\(x,y)->V2 x y) xs) === (fmap (\(x,y)->V2 x y) xs)
+    lerp' (fmap (uncurry V2) xs) === fmap (uncurry V2) xs
 
 zipWithLub :: (a -> a -> [a]) -> [a] -> [a] -> [[a]]
 zipWithLub _ xs [] = [xs]
@@ -110,11 +112,11 @@ zipWithLub f xs ys = zipWith f xs ys
 zipWithLub' :: (a -> a -> [a]) -> [a] -> [a] -> [a]
 zipWithLub' _ xs [] = xs
 zipWithLub' _ [] ys = ys
-zipWithLub' f xs ys = fromJust $ (<>) <$> headMay res <*> (join . fmap (drop 1) <$> tailMay res) where res = zipWith f xs ys
+zipWithLub' f xs ys = fromJust $ (<>) <$> headMay res <*> ((=<<) (drop 1) <$> tailMay res) where res = zipWith f xs ys
 
 lerp' :: [V2 CInt] -> [V2 CInt]
 -- lerp' xs = join $ zipWithLub lerpLine xs (tail xs)
-lerp' (fmap v2ToTuple -> xs) = fmap tupleToV2 $ zipWithLub' lerpLine' xs (tail xs)
+lerp' (fmap v2ToTuple -> xs) = tupleToV2 <$> zipWithLub' lerpLine' xs (tail xs)
 
 lerpLine' :: (CInt,CInt) -> (CInt,CInt) -> [(CInt,CInt)]
 lerpLine' (x0,y0) (x1,y1) =
@@ -135,10 +137,10 @@ prop_lerpIsSupersequence :: (CInt,CInt) -> (CInt,CInt) -> Bool
 prop_lerpIsSupersequence a b = [a,b] `isSubsequenceOf` lerpLine' a b
 
 tupleToV2 :: (CInt,CInt) -> V2 CInt
-tupleToV2 = (\(x,y) -> V2 x y)
+tupleToV2 = uncurry V2
 
 v2ToTuple :: V2 CInt -> (CInt,CInt)
-v2ToTuple = (\(V2 x y) -> (x,y))
+v2ToTuple (V2 x y) = (x,y)
 
 lerpLine :: V2 CInt -> V2 CInt -> [V2 CInt]
 lerpLine p0@(V2 x0 y0) p1@(V2 x1 y1) =
@@ -158,11 +160,11 @@ instance Arbitrary RandomWalk where
 
 main = do
   putStrLn "Beginning tests"
-  quickCheck $ \(RandomWalk xs) -> prop_onlyCorners (filterCorners . fmap (\(x,y) -> V2 x y) $ xs)
+  quickCheck $ \(RandomWalk xs) -> prop_onlyCorners (filterCorners . fmap (uncurry V2) $ xs)
   -- FALSE quickCheck $ prop_lerpIsSupersequence
   -- FALSE quickCheck $ \x y z->prop_lerpLineAdjPoints x y z
-  quickCheck $ \(RandomWalk xs) -> prop_lerpCornersId (fmap (\(x,y)->V2 x y) xs)
-  quickCheck $ \(RandomWalk xs) -> prop_findsCorners (fmap (\(x,y) -> V2 x y) xs)
+  quickCheck $ \(RandomWalk xs) -> prop_lerpCornersId (fmap (uncurry V2) xs)
+  quickCheck $ \(RandomWalk xs) -> prop_findsCorners (fmap (uncurry V2) xs)
   -- n <- neighbors 0 0 1 1
   -- print n
   -- m <- neighbors 1 1 1 1
