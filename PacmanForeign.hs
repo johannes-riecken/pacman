@@ -5,6 +5,8 @@ module PacmanForeign
   , neighbors
   , filterCorners
   , v2ToTuple
+  , startPerl
+  , stopPerl
   ) where
 
 import Data.List
@@ -39,6 +41,10 @@ filterCorners xs = unsafePerformIO $ do
   peekArray (fromIntegral outlen) ret
 
 -- foreign import ccall "walkLine" walkLineImpl :: Img -> CInt -> CInt -> Seen -> [Point]
+
+foreign import ccall startPerl :: IO ()
+
+foreign import ccall stopPerl :: IO ()
 
 v2ToTuple :: V2 CInt -> (CInt,CInt)
 v2ToTuple (V2 x y) = (x,y)

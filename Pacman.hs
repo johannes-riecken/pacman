@@ -124,6 +124,7 @@ instance Arbitrary RandomWalk where
 
 main = do
   putStrLn "Beginning tests"
+  startPerl
   quickCheck $ \(RandomWalk xs) -> prop_onlyCorners (filterCorners . fmap (uncurry V2) $ xs)
   -- FALSE quickCheck $ prop_lerpIsSupersequence
   -- FALSE quickCheck $ \x y z->prop_lerpLineAdjPoints x y z
@@ -139,6 +140,7 @@ main = do
   quickCheck prop_substringsSizeN
   quickCheck prop_substringsIso
   quickCheck prop_substringsNumber
+  stopPerl
 -- findLines = walk
 -- 
 -- walk = if black || seen then walkOn else walkLine fromLeft

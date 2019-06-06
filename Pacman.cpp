@@ -17,7 +17,7 @@ static PerlInterpreter *my_perl;
 static const int PIXEL_NEIGHBORS = 8;
 
 extern "C" {
-Point *filterCorners(span<Point> points, size_t *outlen) {
+void startPerl() {
   string module_name_tmp = "Pacman.pm";
   gsl::owner<char *> module_name = new char[module_name_tmp.length()];
   strcpy(module_name, module_name_tmp.c_str());
@@ -32,6 +32,16 @@ Point *filterCorners(span<Point> points, size_t *outlen) {
   perl_parse(my_perl, nullptr, 2, &my_argv[0], static_cast<char **>(nullptr));
   PL_exit_flags |= static_cast<unsigned int>(PERL_EXIT_DESTRUCT_END);
   perl_run(my_perl);
+}
+
+void stopPerl() {
+  FREETMPS;
+  LEAVE;
+  perl_destruct(my_perl);
+  perl_free(my_perl);
+}
+
+Point *filterCorners(span<Point> points, size_t *outlen) {
   dSP;
   ENTER;
   SAVETMPS;
@@ -68,28 +78,10 @@ Point *filterCorners(span<Point> points, size_t *outlen) {
     ret[*outlen - i - 1] = pnt; // TODO pointer-arithmetic
   }
   PUTBACK;
-  FREETMPS;
-  LEAVE;
-  perl_destruct(my_perl);
-  perl_free(my_perl);
   return ret;
 }
 
 Point *neighborsImpl(int x, int y, int dir_x, int dir_y) {
-  string module_name_tmp = "Pacman.pm";
-  gsl::owner<char *> module_name = new char[module_name_tmp.length()];
-  strcpy(module_name, module_name_tmp.c_str());
-  array<char *, 2> my_argv{nullptr, module_name};
-  array<char **, 1> my_argv2{&my_argv[0]};
-  int argc = 1;
-  array<char *, 1> env = {nullptr};
-  array<char **, 1> env2 = {&env[0]};
-  PERL_SYS_INIT3(&argc, &my_argv2[0], &env2[0]);
-  my_perl = perl_alloc();
-  perl_construct(my_perl);
-  perl_parse(my_perl, nullptr, 2, &my_argv[0], static_cast<char **>(nullptr));
-  PL_exit_flags |= static_cast<unsigned int>(PERL_EXIT_DESTRUCT_END);
-  perl_run(my_perl);
   dSP;                                   /* initialize stack pointer      */
   ENTER;                                 /* everything created after here */
   SAVETMPS;                              /* ...is a temporary variable.   */
@@ -116,10 +108,6 @@ Point *neighborsImpl(int x, int y, int dir_x, int dir_y) {
     pnts[i] = p_tmp; // TODO constant-array-index
   }
   PUTBACK;
-  FREETMPS; /* free that return value        */
-  LEAVE;    /* ...and the XPUSHed "mortal" args.*/
-  perl_destruct(my_perl);
-  perl_free(my_perl);
   //   PERL_SYS_TERM();
   return &pnts[0];
 }
@@ -127,20 +115,6 @@ Point *neighborsImpl(int x, int y, int dir_x, int dir_y) {
 // TODO: fill in details
 Point *walkLine(__attribute__((unused)) int **img, int x, int y,
                 __attribute__((unused)) Point *seen) {
-  string module_name_tmp = "Pacman.pm";
-  gsl::owner<char *> module_name = new char[module_name_tmp.length()];
-  strcpy(module_name, module_name_tmp.c_str());
-  array<char *, 2> my_argv{nullptr, module_name};
-  array<char **, 1> my_argv2{&my_argv[0]};
-  int argc = 1;
-  array<char *, 1> env = {nullptr};
-  array<char **, 1> env2 = {&env[0]};
-  PERL_SYS_INIT3(&argc, &my_argv2[0], &env2[0]);
-  my_perl = perl_alloc();
-  perl_construct(my_perl);
-  perl_parse(my_perl, nullptr, 2, &my_argv[0], static_cast<char **>(nullptr));
-  PL_exit_flags |= static_cast<unsigned int>(PERL_EXIT_DESTRUCT_END);
-  perl_run(my_perl);
   dSP;
   ENTER;
   SAVETMPS;
@@ -165,10 +139,6 @@ Point *walkLine(__attribute__((unused)) int **img, int x, int y,
     pnts[i] = p_tmp; // TODO constant array index
   }
   PUTBACK;
-  FREETMPS;
-  LEAVE;
-  perl_destruct(my_perl);
-  perl_free(my_perl);
   //   PERL_SYS_TERM();
   return pnts; // TODO array no pointer decay
 }
