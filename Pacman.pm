@@ -72,11 +72,10 @@ sub setDifference {
 # @img: jagged array of pixels with color info as integer
 # @x: x-coordinate of starting pixel
 # @y: y-coordinate of starting pixel
-# @seen: list of visited pixels including starting point
 # walk along line in image starting at ($x,$y) and return all points on line. Line is white (nonzero)
 # Return: All points on line starting at point
 sub walkLine {
-    my ($img, $x, $y, $seen) = @_;
+    my ($img, $x, $y) = @_;
     my ($xx, $yy) = ($x, $y);
     my ($x_prev, $y_prev);
     my @ret = [$xx, $yy];

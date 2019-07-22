@@ -1,4 +1,5 @@
 // vim: set path+=/usr/lib/perl5/5.28/core_perl/CORE :
+#include <algorithm>
 #include <array>
 #include <gsl/gsl>
 #include <iostream>
@@ -9,9 +10,12 @@
 
 using gsl::span;
 using std::array;
+using std::begin;
 using std::cout;
+using std::end;
 using std::endl;
 using std::string;
+using std::transform;
 
 static PerlInterpreter *my_perl;
 static const int PIXEL_NEIGHBORS = 8;
@@ -113,12 +117,23 @@ Point *neighborsImpl(int x, int y, int dir_x, int dir_y) {
 }
 
 // TODO: fill in details
-Point *walkLine(__attribute__((unused)) int **img, int x, int y,
-                __attribute__((unused)) Point *seen) {
+Point *walkLine(span<span<int>> img, int x, int y, size_t *outlen) {
   dSP;
   ENTER;
   SAVETMPS;
   PUSHMARK(SP);
+  AV *img_av = newAV();
+  for (auto &row : img) {
+    AV *row_av = newAV();
+    for (auto &val : row) {
+      SV *val_sv = newSViv(val);
+      av_push(row_av, val_sv);
+    }
+    SV *row_sv = newRV_inc(reinterpret_cast<SV *>(row_av));
+    av_push(img_av, row_sv);
+  }
+  SV *img_sv = newRV_inc(reinterpret_cast<SV *>(img_av));
+  XPUSHs(sv_2mortal(img_sv));
   XPUSHs(sv_2mortal(newSViv(x)));
   XPUSHs(sv_2mortal(newSViv(y)));
   PUTBACK;
