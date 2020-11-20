@@ -3,7 +3,6 @@
 
 require 'matrix'
 require 'rexml/document'
-require 'set'
 
 w = 224
 board = IO.readlines('pacman.pbm')[3..-1].map(&:chomp).join.split(//).each_slice(w).to_a
@@ -82,8 +81,32 @@ def to_svg(m, lines, polygons)
   doc
 end
 
+def to_x3d(m, lines, polygons)
+  doc = REXML::Document.new("
+    <X3D version='3.2' width='#{m.column_size}px' height='#{m.row_size}px'>
+      <Scene/>
+    </X3D>")
+  scene = doc.root.elements['Scene']
+  lines.each.with_index do |coords, i|
+    shape = scene.add_element('Shape')
+    shape.add_element('Appearance').add_element('Material', {'diffuseColor' => '1 0 0'})
+    coords3d = coords.flat_map { |coord| [[coord[1], 0, coord[0]], [coord[1], 10, coord[0]]] }
+    faces = (0 .. coords3d.length - 1).each_cons(4).each_slice(2).map(&:first).map { |a, b, c, d| [a, c, d, b] }
+    if polygons[i]
+      faces += [[coords3d.length - 2, 0, 1, coords3d.length - 1]]
+    end
+    coords3d_str = coords3d.map { |x| x.join(' ') }.join(' ')
+    faces_str = faces.map { |a, b, c, d| [a, b, c, d, -1] }.map { |x| x.join(' ') }.join(' ')
+    shape.add_element('IndexedFaceSet', {'coordIndex' => faces_str, 'solid' => 'false'}).add_element(
+      'Coordinate', {'point' => coords3d_str})
+  end
+  doc
+end
+
 polygons = []
 lines = find_line_coord_lists(m, polygons).map { |coords| endpoints(coords) }
 output = ''
-to_svg(m, lines, polygons).write(output: output)
-File.open('pacman.svg', 'w') { |f| f.puts(output) }
+# to_svg(m, lines, polygons).write(output: output)
+to_x3d(m, lines, polygons).write(output: output)
+# File.open('pacman.svg', 'w') { |f| f.puts(output) }
+File.open('pacman.x3d', 'w') { |f| f.puts(output) }
