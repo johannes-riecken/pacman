@@ -94,6 +94,12 @@ class Maze
     doc
   end
 
+  def to_svg_text()
+    output = ''
+    to_svg().write(output: output)
+    output
+  end
+
   def to_x3d()
     doc = REXML::Document.new("
       <X3D version='3.2' width='#{@m.column_size}px' height='#{@m.row_size}px'>
@@ -115,15 +121,17 @@ class Maze
     end
     doc
   end
+
+  def to_x3d_text()
+    output = ''
+    to_x3d().write(output: output)
+    output
+  end
 end
 
 
 maze = Maze.new('pacman.pbm')
 maze.find_line_coord_lists
 maze.compress_lines
-svg_output = ''
-maze.to_svg().write(output: svg_output)
-File.open('pacman.svg', 'w') { |f| f.puts(svg_output) }
-x3d_output = ''
-maze.to_x3d.write(output: x3d_output)
-File.open('pacman.x3d', 'w') { |f| f.puts(x3d_output) }
+File.open('pacman.svg', 'w') { |f| f.puts(maze.to_svg_text) }
+File.open('pacman.x3d', 'w') { |f| f.puts(maze.to_x3d_text) }
