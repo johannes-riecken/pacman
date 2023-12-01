@@ -1,4 +1,4 @@
-FROM ruby:alpine
+FROM ruby:3.2.2-alpine3.18
 WORKDIR /app
 COPY . .
 RUN rm pacman.svg
